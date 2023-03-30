@@ -1,0 +1,87 @@
+1. What is OAuth?
+
+--> Open Authentication
+--> One approach to user authentication
+--> Uses 3rd party services like Facebook, Google, Github,...
+
+2. The OAuth Flow
+
+--> oAuthFlow.png
+
+3. Setting up an Express App
+
+--> npm install express
+--> npm install nodemon
+--> npm install ejs
+
+4. Auth Routes
+
+--> authRoutes.js
+--> auth --> /login, /logout, /google
+
+5. Passport Initial Setup
+
+--> Passport core library --> authenticate users
+--> A strategy --> Google, Facebook, Github,...
+
+--> npm install passport
+--> npm install passport-google-oauth20
+
+--> config/passportSetup.js
+
+passport.use(new GoogleStrategy({}), () => {});
+
+6. Google Strategy Setup
+
+--> Register an application with Google
+
+{
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET
+}
+
+7. Securing Keys
+
+config.env
+
+8. The Redirect URI
+
+--> Set up the redirect URI on Google
+--> http://127.0.0.1:3000/whatever
+--> http://127.0.0.1:3000/auth/google/redirect
+
+--> callbackURL --> '/auth/google/redirect'
+
+require('./config/passportSetup.js);
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+
+9. Passport Callback Function
+
+--> '/auth/login/redirect'
+--> passport.authenticate('google', {
+  failureRedirect: < url >
+})
+
+--> before login successfully --> fires passport callback
+--> accessToken, refreshToken, profile, done
+
+10. Creating a Datebase on mLab
+
+11. Making a User Model
+
+12. Saving user to MongoDB
+
+13. Retrieving Users
+
+14. Progress Refresh
+
+15. Serializing Users
+
+--> Sessions have a lock
+--> The key to a session is a cookie
+--> This cookie is initially sent by server to client
+--> Then on every subsequent request, it is sent by client to server
+
+16. Cookie Session
+
+--> npm install cookie-session

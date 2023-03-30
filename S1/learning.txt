@@ -1,0 +1,177 @@
+4. Node Internals
+
+--> JS Code --> NodeJS (V8 and libuv)
+
+--> Dependencies of NodeJS like V8 and libuv
+
+--> V8
+--> V8 project is an open-source JS engine created by Google
+--> Used to execute JS code outside of the browser
+
+--> libuv
+--> A C++ open-source project
+--> Gives Node access to the operating systems, underlying filesystem, \
+networking, handles some aspects of concurrency
+
+--> Why we need NodeJS? --> Interact with C++ code
+
+5. Module Implementations
+
+--> NodeJS
+--> Give us a nice, consistent API (http, crypto,...) for getting access \
+to functionality that is ultimately implemented inside a V8 and libuv
+
+--> process.binding()
+--> NodeJS joins up the C++ side of its project to the JavaScript side
+
+6. Node Backed by C++
+
+7. The Basics of Threads
+
+--> Event Loop --> Handle asynchronous code
+
+--> Run a program --> Start a process
+--> A process is an instance of a computer program that is being executed
+--> In a single process, we can have multiple things called threads
+--> Imagine Thread as a todo-list that is given to the CPU and the CPU runs every instruction on it
+
+--> Scheduling --> decides which thread to process at a single point in time
+--> OS scheduler --> decides which thread should be processed
+--> Operating System Scheduler --> looks at all the different threads that are asking to be processed \
+and figure out how to do some amount of work on each of them
+--> Makes sure that threads don't have to wait too long to be processed
+
+--> So in order to more quickly process threads or process more at one given time
++ First, add in additional CPU cores to our machine --> more than one cores inside of the CPU
+--> One core can process more than one thread at a time through a process called multi-threading or hyper-threading
++ Second, handle concurrency like I/O operations (always takes some non-zero amount of time)
+
+8. The Node Event Loop
+
+Node Program --> Node Process --> One Thread --> Event Loop
+
+--> Event Loop being like a control structure that decides what One Thread should be doing at any given point in time
+--> Every single time the event loop runs inside of our Node application, we refer to that as one tick
+
+9. The Event Loop Implementation
+
+--> Event Loop checks for continuation
++ Check one: Any pending setTimeout, setInterval, setImmediate
++ Check two: Any pending OS tasks? (Like server listening to port)
++ Check three: Any pending long running operations? (Like fs module)
+
+10. Event Loop Ticks
+
+10.5. More on Event Loop
+
+10.5.1. Event Loop
+
+--> JavaScript is a synchronous, blocking, single-threaded language
+--> To make async programming possible, we need the help of libuv
+
+--> NodeJS --> V8 + libuv
+--> V8 --> Memory Heap + Call stack
+
+--> Event Loop
+--> Event Loop is a C program and is part libuv
+--> A design pattern that orchestrates or co-ordinates the execution of synchronous \
+and asynchronous code in NodeJS
+
+--> Event Loop is alive as long as NodeJS Application is up and running
+--> Event Loop comes across 6 different queues in one loop (4 queues in libuv and 2 microtask queues) and I/O polling
+--> 4 queues in libuv
++ Timer queue --> setTimeout/setInterval callbacks
++ I/O queue --> I/O callbacks --> Goes with IO polling
++ Check queue --> setImmediate callbacks
++ Close queue --> Close handlers
+--> 2 microtask queues --> Not part of libuv but still a part of NodeJS Runtime
++ nextTick queue --> process.nextTick callbacks
++ promise queue --> promise callbacks
+
+--> Event Loop
+--> Synchronous code takes priority over Asynchronous code
+--> Only after the call stack is empty, the event loop comes into the picture
+
+--> Microtask --> Timer --> Microtask --> I/O --> Microtask --> Check --> Microtask --> Close --> Continue/Exit
+
+10.5.2. Microtask Queues
+
+--> nextTick callbacks take priority over promise callbacks
+--> process.nextTick can cause Callbacks Starvation
+
+10.5.3. Timer Queues
+
+--> Microtask queue takes priority --> Interupt other queues
+
+Promise 1
+Promise 2
+Promise 3
+Next Tick
+
+Timeout callback 1
+Timeout callback 2
+Next Tick
+Timeout callback 3
+
+--> Check Microtask queue after every callback
+
+--> Timer queue is technically not a queue, it's a Min Heap data structure
+
+10.5.4. I/O Queue
+
+--> setTimeout takes at least 1ms --> The other of Timer and IO is not guaranteed
+
+10.5.5. I/O Polling
+10.5.6. Check Queue
+10.5.7. Close Queue
+
+11. Is NodeJS Single Threaded?
+
+--> Not all of Node is truly single-threaded
+
+--> Node Event Loop --> Single Threaded
+--> Some of Node Framework / Std Lib --> Not Single Threaded --> pbkdf2
+
+13. The Libuv Thread Pool
+
+--> For some standard library function calls, the Node C++ side and Libuv \
+decide to do some expensive calculations outside of the Event Loop entirely
+--> Make use of something called a Thread pool
+--> The Thread pool is a series of 4 threads (by default) that can be used for running \
+computationally intensive tasks such as pbkdf2 function
+
+14. Threadpools with Multithreading
+
+--> Tasks --> Thread pool --> Threads --> Cores
+
+15. Changing Threadpool Size
+16. Common Threadpool Questions
+
+--> Threadpool stuff fits into the Event Loop --> I/O queue
+
+17. Explaining OS Operations
+
+18. Libuv OS Delegation
+
+--> So many HTTP requests complete simutaneously
+--> Make HTTP requests, neither Libuv nor Node has any code to handle \
+all of the super low level operations that are involved with a network request
+--> Libuv delegates the request-making to the underlying operating system
+
+19. OS/Async Common Questions
+
+--> What funcitons in Node std library use the OS's async features?
+--> Some stuffs that's related to Networking
+
+--> How does this OS async stuff fit into the event loop? --> Close queue
+
+20. Review
+
+--> The Event Loop is Single-threaded
+--> The entire NodeJS is not Single-threaded
++ pbkdf2 --> thread pool --> I/O queue
++ networking stuffs --> underlying operating system --> Close queue
+
+21. Crazy Node Behaviour
+
+22. Unexpected Event Loop Events

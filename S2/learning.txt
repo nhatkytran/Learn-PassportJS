@@ -1,0 +1,143 @@
+1. Cluster Module
+
+--> The cluster module enables the creation of child processes \
+(also called workers) that run simutaneously
+--> All created workers share the same server port
+
+--> index.js (Cluster Master) --> [Worker 1, Worker 2,...]
++ Master is only in charge of the workers
++ Workers are in charge of handling incoming requests, reading files,...
++ Each worker gets its own event loop, memory and V8 instance
+
+---
+const cluster = require('cluster');
+if (cluster.isMaster) {
+  console.log(`This is Cluster Master < ${process.pid} >`);
+
+  // Define how many workers --> Default is 1
+  const numWorkers = 4;
+  Array.from({ length: numWorkers }).forEach(() => cluster.fork());
+} else {
+  console.log(`This is Cluster Worker < ${process.pid} >`);
+}
+---
+
+--> Why shouldn't we simply create a large number of workers using cluster.fork()?
+
+--> We should only create as many workers as there are CPU cores \
+on the machine the app is running
+--> If you create more workers than there are logical cores on the computer it can cause \
+an overhead as the system will have to schedule all the created workers with \
+fewer number of cores
+
+const os = require('os');
+--> os.cpus().length
+--> use pm2 (https://www.npmjs.com/package/pm2)
+---
+pm2 start cluster.js -i 0
+pm2 stop cluster.js
+---
+
+2. Worker Threads Module
+
+(https://www.youtube.com/watch?v=Wm4MZwfEZd4&list=PLC3y8-rFHvwh8shCMHFA5kWxD9PaPwxaY&index=62)
+
+--> The worker threads module enables the use of threads that execute JS in parallel
+--> Code executed in a worker thread runs in a separate child process, preventing it \
+from blocking your main application
+
+--> The cluster module can be used to run multiple instances of NodeJS that can \
+distribute workloads
+--> Worker threads module allows running multiple application threads within a single \
+NodeJS instance
+
+--> When process isolation is not needed, that is, no separate instances of V8, event loop \
+and memory are needed, you should use worker threads
+
+---
+
+Some tasks like read data using Mongoose --> async await
+Some tasks with large for loop --> can not use async await --> Block --> Use worker thread
+
+3. Express Setup
+
+--> Cluster is used for production and Nodemon is used for development
+
+4. Blocking the Event Loop
+
+--> Request --> Node Server (Single Thread) --> Response
+
+5. Clustering in Theory
+
+--> When we start to use Clustering inside a Node application \
+--> We're gonna be starting up multiple Node processes
+
+--> There's going to be one parent process, or one kind of like overarching process \
+called the cluster manager
+--> The cluster manager is responsible for monitoring the health \
+of individual instances of our application launched at the same time on our computer
+
+6. Forking Children
+
+const custer = require('cluster');
+cluster.isMaster
+cluster.fork()
+
+--> Cluster Manager --> isMaster --> true
+--> Worker instances --> isMaster --> false
+
+--> isPrimary (isMaster is deprecated)
+
+--> Number of CPU cores --> const cores = require('os').cpus().length;
+
+7. Clustering in Action
+
+const cluster = require('cluster');
+const os = require('os');
+if (cluster.isPrimary)
+  return Array.from({ length: os.cpus().length }).forEach(
+    () => cluster.fork()
+  );
+
+--> Cluster mangaer --> Load balancer
+
+8. Benchmarking Server Performance
+
+--> ab -c 50 -n 50 127.0.0.1:3000/
+
+9. Benchmark Refactor & Need More Children!
+
+if (cluster.isPrimary)
+  return os.cpus().forEach(cluster.fork);
+
+10. PM2 Installation
+
+--> npm install pm2@latest -g
+
+--> What is PM2?
+--> PM2 is a daemon process manager that will help you manage and keep your application online
+
+11. PM2 Configuration
+
+--> pm2 start index.js -i 0
+
+--> -i 0 --> tells PM2 to figure out number of logical cores for us
+
+--> pm2 list
+--> pm2 show < name >
+--> pm2 monit
+
+"start": "pm2 start cluster.js -i 0",
+"stop": "pm2 delete cluster.js"
+
+--> One core handles 2 threads
+
+12. Webworker Threads
+
+--> Use threads in libuv
+
+13. Worker Threads in Action
+
+14. Benchmarking Workers --> ab -c 1 -n 1 127.0.0.1:3000/
+
+https://www.udemy.com/course/advanced-node-for-developers/learn/lecture/9646770#questions/16733352
