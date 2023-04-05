@@ -316,3 +316,90 @@ data and compresses it into a deterministic small piece of data outcome
 --> Identity Verification --> Digital Signatures
 + Encrypt(someMessage, private_key)
 + Decrypt(someMessage, public_key)
+
+--> Digital Signature and Verify Identity
+
++++ How JWTs work? +++
+
+--> What is JWTs --> Base64url encoded characters
+--> JWTs --> Self-contained way for securely transmitting information between \
+parties in a JSON objects
+--> Used to authenticate and authorize users in Web and Mobile applications
++ Header --> Informations, hashing algorithm,...
++ Payload --> Claims --> User's ID,...
++ Signature
+--> RS256 --> RSA + SHA256
+--> RSA for Public Key and Private Key
+--> SHA256 for hashing the header and the payload
+
+--> Base64 and Base64url
+--> Base64 is a binary-to-text encoding scheme that represents binary data \
+in an ASCII string format. Base64url is a variant of Base64 that uses a \
+modified alphabet that is URL-safe and is designed to be used in URLs and URIs
+
+--> Server
+--> Sign JWTs using Private Key
+--> Verify JWTs using Public Key
+
+--> Private Key + Hash --> Signature
+--> Public Key + Signature --> Hash
+
++++ Implementation of Passport JWT Strategy +++
+
+--> Most Complex
+--> Use the NodeJS crypto library and write our own middleware to sign and \
+verify JWTs
+
+--> Somewhat Complex
+--> Use the jsonwebtoken NPM module and write our own middleware
+
+--> Least Complex
+--> Use the jsonwebtoken NPM module and use passport-jwt as our middleware
+
+--> The JWT Authentication Process
+1. User logs in to web app, and is issued a Json Web Token (JWT)
+2. User client (usually a browser like Google Chrome) stores the JTW in local storage \
+or a Cookie
+3. On every HTTP request that requires authentication, the user client (browser) \
+will attach the JWT in the "Authorization" HTTP header
+4. The server looks for the JWT in the "Authorization" HTTP header and verifies \
+the signature
+5. If the signature is valid, the server decodes the JWT, usually gets the \
+database ID of the user in the "payload.sub" field, looks the user up in the database, \
+and stores the user object to use
+6. The user receives the route data
+
+--> Cookies can be a good option for storing sensitive information like JWTs \
+because they can be set with an `HttpOnly` flag that prevents them from being \
+accessed or manipulated through JavaScript. This makes them more secure against \
+cross-site scripting (XSS) attacks. However, cookies are also vulnerable to \
+cross-site request forgery (CSRF) attacks, where a malicious website could trick \
+a user into making an unintended request to the target website. To prevent CSRF \
+attacks, the cookie should also be set with a `SameSite=Strict` attribute, which \
+ensures that the cookie is only sent in first-party contexts
+
++++ Code +++
+
+--> app.use(passport.initialize());
+--> JWT Implementation --> Don't need app.use(passport.session())
+
+passportJTWOptions = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: PUB_KEY || secret phrase,
+  issuer: "enter issuer here",
+  audience: "enter audience here",
+  algorithms: ["RS256"],
+  ignoreExpiration: false,
+  passReqToCallback: false,
+  jsonwebtokenOptions: {
+    complete: false,
+    clockTolerance: "",
+    maxAge: "2d",
+    clockTimestamp: "100",
+    nonce: "string here for OpenID"
+  }
+}
+
+---
+const { JwtStrategy, ExtractJwt } = require("passport-jwt");
+---
